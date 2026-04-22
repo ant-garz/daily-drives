@@ -3,30 +3,69 @@ import os
 
 from processor.detect import detect_faces
 
-# “How do I transform pixels based on detections?”
+
+# -----------------------------
+# Temporal memory settings
+# -----------------------------
+FACE_MEMORY_FRAMES = 5
+
+
 def blur_region(frame, x, y, w, h):
     """
     Apply Gaussian blur to region of interest.
     """
-    roi = frame[y:y+h, x:x+w]
+    h_img, w_img = frame.shape[:2]
+
+    # clamp bounds (prevents crashes / artifacts)
+    x1 = max(0, x)
+    y1 = max(0, y)
+    x2 = min(w_img, x + w)
+    y2 = min(h_img, y + h)
+
+    roi = frame[y1:y2, x1:x2]
 
     if roi.size == 0:
         return frame
 
     blurred = cv2.GaussianBlur(roi, (51, 51), 30)
-    frame[y:y+h, x:x+w] = blurred
+    frame[y1:y2, x1:x2] = blurred
 
     return frame
 
 
-def apply_privacy_filters(frame, blur_faces=True):
+# -----------------------------
+# Stateful tracker (key fix)
+# -----------------------------
+class FaceMemory:
+    def __init__(self, memory_frames=FACE_MEMORY_FRAMES):
+        self.memory_frames = memory_frames
+        self.last_faces = []
+        self.counter = 0
+
+    def update(self, detected_faces):
+        if len(detected_faces) > 0:
+            self.last_faces = detected_faces
+            self.counter = self.memory_frames
+        else:
+            self.counter -= 1
+
+        if self.counter > 0:
+            return self.last_faces
+        return []
+
+
+def apply_privacy_filters(frame, face_memory, blur_faces=True):
     """
-    Runs detection + blur on a single frame.
+    Runs detection + temporal smoothing + blur.
     """
-    if blur_faces:
-        faces = detect_faces(frame)
-        for (x, y, w, h) in faces:
-            frame = blur_region(frame, x, y, w, h)
+    if not blur_faces:
+        return frame
+
+    detected_faces = detect_faces(frame)
+    faces_to_use = face_memory.update(detected_faces)
+
+    for (x, y, w, h) in faces_to_use:
+        frame = blur_region(frame, x, y, w, h)
 
     return frame
 
@@ -36,12 +75,16 @@ def process_clips(clips, output_dir):
     Reads video files, applies blur frame-by-frame,
     writes processed MP4s.
     """
+
+    import cv2
+
     processed_paths = []
 
     total = len(clips)
     print("\nProcessing clips (privacy filter)...")
 
     for i, clip in enumerate(clips, start=1):
+
         filename = os.path.basename(clip)
         output_path = os.path.join(
             output_dir,
@@ -68,12 +111,15 @@ def process_clips(clips, output_dir):
         fourcc = cv2.VideoWriter_fourcc(*"mp4v")
         out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
 
+        # IMPORTANT: per-video memory tracker
+        face_memory = FaceMemory()
+
         while True:
             ret, frame = cap.read()
             if not ret:
                 break
 
-            frame = apply_privacy_filters(frame)
+            frame = apply_privacy_filters(frame, face_memory)
             out.write(frame)
 
         cap.release()

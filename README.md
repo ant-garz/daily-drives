@@ -11,12 +11,14 @@ A command-line tool for organizing and stitching dashcam footage into a single "
 - Efficiently stitches clips together using FFmpeg (no re-encoding)
 
 ## Project Structure
+```text
 ├── daily-drives.py
 └── processor/
     ├── utils.py
     ├── detect.py
     ├── blur.py
     └── stitch.py
+```
 
 
 ### Overview
@@ -37,7 +39,9 @@ A command-line tool for organizing and stitching dashcam footage into a single "
   Combines video clips into a single output file using FFmpeg’s concat demuxer for fast, lossless stitching.
 
 ### Processing Flow
+```text
 → group & sort (utils.py)
 → optional processing (blur.py + detect.py)
 → stitch clips (stitch.py)
 → final output video
+```

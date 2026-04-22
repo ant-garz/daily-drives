@@ -34,8 +34,8 @@ def summarize_day(clips):
     """Return start/end time of clip set."""
     times = [os.path.getmtime(c) for c in clips]
 
-    start = datetime.fromtimestamp(min(times)).strftime("%H:%M:%S")
-    end = datetime.fromtimestamp(max(times)).strftime("%H:%M:%S")
+    start = datetime.fromtimestamp(min(times)).strftime("%I:%M:%S %p")
+    end = datetime.fromtimestamp(max(times)).strftime("%I:%M:%S %p")
 
     return start, end
 

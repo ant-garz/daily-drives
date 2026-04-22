@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 
 from processor.utils import (
     group_clips_by_date,
@@ -73,10 +74,10 @@ def main():
 
     date_str, clips = choose_date(grouped_clips)
 
-    start_time, end_time = summarize_day(clips)
+    start_time_label, end_time_label = summarize_day(clips)
 
     print(f"\nSelected date: {date_str}")
-    print(f"Clips: {len(clips)} | Time range: {start_time} -> {end_time}")
+    print(f"Clips: {len(clips)} | Time range: {start_time_label} -> {end_time_label}")
 
     use_blur = ask_for_blur()
 
@@ -86,10 +87,12 @@ def main():
     # Step 1: optional processing
     # -------------------------
     if use_blur:
+        start_time = time.time()
         print("\nRunning privacy processing...")
         final_clips = process_clips(clips, processed_dir)
     else:
         print("\nSkipping privacy processing...")
+        start_time = time.time()
         final_clips = clips
 
     # -------------------------
@@ -100,8 +103,19 @@ def main():
     print("\nStitching clips...")
     stitch_clips(final_clips, final_output_path)
 
+    # -------------------------
+    # Timing + completion output
+    # -------------------------
+    end_time = time.time()
+    elapsed = end_time - start_time
+
+    hours = int(elapsed // 3600)
+    minutes = int((elapsed % 3600) // 60)
+    seconds = int(elapsed % 60)
+
     print(f"\nOutput saved to: {final_output_path}")
     print("Done!")
+    print(f"Time elapsed: {hours:02d}:{minutes:02d}:{seconds:02d}")
 
 
 if __name__ == "__main__":

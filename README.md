@@ -21,7 +21,7 @@ A command-line tool for organizing and stitching dashcam footage into a single "
 ```
 
 
-### Overview
+## Overview
 
 - **daily-drives.py**  
   Entry point for the CLI. Handles user interaction and orchestrates the full processing pipeline.
@@ -38,10 +38,32 @@ A command-line tool for organizing and stitching dashcam footage into a single "
 - **processor/stitch.py**  
   Combines video clips into a single output file using FFmpeg’s concat demuxer for fast, lossless stitching.
 
-### Processing Flow
+## Processing Flow
 ```text
 → group & sort (utils.py)
 → optional processing (blur.py + detect.py)
 → stitch clips (stitch.py)
 → final output video
 ```
+
+## Audio
+Audio is preserved only when privacy filtering is disabled and if it was included in the original video files.
+
+When privacy filtering is enabled, clips are processed using OpenCV, which re-encodes video frames and does not support audio streams. As a result, the final output will not contain audio.
+
+This is a known limitation of the current pipeline design.
+
+## Codec Requirements
+
+This project assumes that all input video clips share the same video and audio codecs, as well as consistent encoding parameters.
+
+The stitching process uses FFmpeg’s concat demuxer with stream copy (`-c copy`), which does not re-encode media. As a result, all clips must be compatible at the container and codec level for successful concatenation.
+
+### Required consistency between clips:
+- Same video codec (e.g., H.264)
+- Same audio codec (if present)
+- Same frame rate
+- Same resolution (recommended)
+- Same encoding settings
+
+If clips differ in these properties, FFmpeg may fail to stitch them correctly or may drop audio/video streams.

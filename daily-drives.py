@@ -34,7 +34,7 @@ def choose_date(grouped_clips):
         print(f"[{i}] {date} ({len(grouped_clips[date])} clips)")
 
     while True:
-        choice = input("\nSelect a date: ").strip()
+        choice = input(f"\nSelect a date (1-{len(dates)}): ").strip()
 
         if choice.isdigit():
             idx = int(choice) - 1

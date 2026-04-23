@@ -49,8 +49,6 @@ def stitch_clips(clips, output_path):
             output_path
         ]
 
-        print("\nStitching clips...")
-
         # -----------------------------
         # 5. Fully silent execution
         # -----------------------------

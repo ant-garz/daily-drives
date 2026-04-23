@@ -53,11 +53,12 @@ Download link:
 https://github.com/opencv/opencv_zoo/raw/main/models/face_detection_yunet/face_detection_yunet_2023mar.onnx
 
 ## Audio
-Audio is preserved only when privacy filtering is disabled and if it was included in the original video files.
+Audio is preserved only when privacy filtering is disabled and present in the original clips.
 
-When privacy filtering is enabled, clips are processed using OpenCV, which re-encodes video frames and does not support audio streams. As a result, the final output will not contain audio.
+When privacy filtering is enabled, video frames are processed using OpenCV. This step re-encodes the video and does not retain audio streams, so the final output will not contain audio.
 
 This is a known limitation of the current pipeline design.
+Future versions may address this by reattaching audio after processing.
 
 ## Codec Requirements
 This project assumes that all input video clips share the same video and audio codecs, as well as consistent encoding parameters.

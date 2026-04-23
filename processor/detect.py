@@ -1,40 +1,101 @@
 import cv2
+import os
 
-face_cascade = cv2.CascadeClassifier(
-    cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
+
+# -----------------------------
+# Model configuration
+# -----------------------------
+
+# Build path to the ONNX model relative to this file
+MODEL_PATH = os.path.join(
+    os.path.dirname(__file__),
+    "models",
+    "face_detection_yunet_2023mar.onnx"
+)
+
+# Validate that model exists (fail early with clear message)
+if not os.path.exists(MODEL_PATH):
+    raise FileNotFoundError(
+        f"YuNet model not found at: {MODEL_PATH}\n"
+    )
+
+
+# -----------------------------
+# Initialize detector
+# -----------------------------
+
+# Create the YuNet face detector
+# This is done once and reused for all frames (important for performance)
+face_detector = cv2.FaceDetectorYN.create(
+    MODEL_PATH,
+    "",                  # no config file needed
+    (320, 320),          # default input size (will be updated dynamically)
+    score_threshold=0.6, # confidence threshold (higher = fewer false positives)
+    nms_threshold=0.3,   # non-max suppression threshold
+    top_k=5000           # max number of detections
 )
 
 
-def detect_faces(frame, scale=0.8):
+# -----------------------------
+# Face detection function
+# -----------------------------
+
+def detect_faces(frame):
     """
-    Returns bounding boxes (x, y, w, h) in original frame coordinates.
+    Detect faces using OpenCV's YuNet DNN model.
+
+    Returns:
+        List of bounding boxes in format: (x, y, w, h)
     """
 
-    small = cv2.resize(frame, (0, 0), fx=scale, fy=scale)
-    gray = cv2.cvtColor(small, cv2.COLOR_BGR2GRAY)
+    # -----------------------------
+    # 1. Get frame dimensions
+    # -----------------------------
+    # YuNet requires knowing the input size per frame
+    height, width = frame.shape[:2]
 
-    faces = face_cascade.detectMultiScale(
-        gray,
-        scaleFactor=1.05,
-        minNeighbors=7,
-        minSize=(40, 40),
-    )
+    # -----------------------------
+    # 2. Set detector input size
+    # -----------------------------
+    # Must match the current frame size
+    face_detector.setInputSize((width, height))
+
+    # -----------------------------
+    # 3. Run detection
+    # -----------------------------
+    # Returns:
+    #   - retval (unused)
+    #   - detections (Nx15 array or None)
+    _, detections = face_detector.detect(frame)
 
     results = []
 
-    for (x, y, w, h) in faces:
+    # -----------------------------
+    # 4. Process detections
+    # -----------------------------
+    if detections is not None:
+        for det in detections:
+            # Each detection contains:
+            # [x, y, w, h, score, landmarks...]
 
-        # scale back to original frame
-        x = int(x / scale)
-        y = int(y / scale)
-        w = int(w / scale)
-        h = int(h / scale)
+            x, y, w_box, h_box = det[:4]
 
-        # light filtering (prevents obvious noise)
-        aspect = w / float(h)
-        if aspect < 0.75 or aspect > 1.3:
-            continue
+            # Convert to integers (pixel coordinates)
+            x = int(x)
+            y = int(y)
+            w_box = int(w_box)
+            h_box = int(h_box)
 
-        results.append((x, y, w, h))
+            # -----------------------------
+            # 5. Optional filtering
+            # -----------------------------
+            # Skip extremely small detections (noise)
+            if w_box < 30 or h_box < 30:
+                continue
 
+            results.append((x, y, w_box, h_box))
+
+    # -----------------------------
+    # 6. Return final bounding boxes
+    # -----------------------------
     return results

@@ -5,18 +5,62 @@ from processor.detect import detect_faces
 
 
 # -----------------------------
-# Temporal memory settings
+# Settings
 # -----------------------------
-FACE_MEMORY_FRAMES = 5
+FACE_MEMORY_FRAMES = 10      # how long to persist faces
+SMOOTHING_ALPHA = 0.6        # 0 = no smoothing, 1 = no memory
+PADDING_RATIO = 0.3          # expand bounding boxes
+BLUR_KERNEL = (71, 71)       # stronger blur
+BLUR_SIGMA = 50
+
+
+# -----------------------------
+# Helpers
+# -----------------------------
+def expand_box(x, y, w, h):
+    pad_w = int(w * PADDING_RATIO)
+    pad_h = int(h * PADDING_RATIO)
+
+    return (
+        x - pad_w,
+        y - pad_h,
+        w + 2 * pad_w,
+        h + 2 * pad_h
+    )
+
+
+def smooth_boxes(old_boxes, new_boxes):
+    """
+    Smooth bounding boxes between frames.
+    Assumes small number of faces (dashcam use case).
+    """
+    if not old_boxes:
+        return new_boxes
+
+    smoothed = []
+
+    for i, (nx, ny, nw, nh) in enumerate(new_boxes):
+        if i < len(old_boxes):
+            ox, oy, ow, oh = old_boxes[i]
+
+            x = int(SMOOTHING_ALPHA * nx + (1 - SMOOTHING_ALPHA) * ox)
+            y = int(SMOOTHING_ALPHA * ny + (1 - SMOOTHING_ALPHA) * oy)
+            w = int(SMOOTHING_ALPHA * nw + (1 - SMOOTHING_ALPHA) * ow)
+            h = int(SMOOTHING_ALPHA * nh + (1 - SMOOTHING_ALPHA) * oh)
+        else:
+            x, y, w, h = nx, ny, nw, nh
+
+        smoothed.append((x, y, w, h))
+
+    return smoothed
 
 
 def blur_region(frame, x, y, w, h):
     """
-    Apply Gaussian blur to region of interest.
+    Apply Gaussian blur safely within frame bounds.
     """
     h_img, w_img = frame.shape[:2]
 
-    # clamp bounds (prevents crashes / artifacts)
     x1 = max(0, x)
     y1 = max(0, y)
     x2 = min(w_img, x + w)
@@ -27,14 +71,14 @@ def blur_region(frame, x, y, w, h):
     if roi.size == 0:
         return frame
 
-    blurred = cv2.GaussianBlur(roi, (51, 51), 30)
+    blurred = cv2.GaussianBlur(roi, BLUR_KERNEL, BLUR_SIGMA)
     frame[y1:y2, x1:x2] = blurred
 
     return frame
 
 
 # -----------------------------
-# Stateful tracker (key fix)
+# Temporal memory
 # -----------------------------
 class FaceMemory:
     def __init__(self, memory_frames=FACE_MEMORY_FRAMES):
@@ -44,40 +88,43 @@ class FaceMemory:
 
     def update(self, detected_faces):
         if len(detected_faces) > 0:
-            self.last_faces = detected_faces
+            # Expand boxes first
+            expanded = [expand_box(*f) for f in detected_faces]
+
+            # Smooth with previous
+            smoothed = smooth_boxes(self.last_faces, expanded)
+
+            self.last_faces = smoothed
             self.counter = self.memory_frames
         else:
             self.counter -= 1
 
         if self.counter > 0:
             return self.last_faces
+
         return []
 
 
+# -----------------------------
+# Frame processing
+# -----------------------------
 def apply_privacy_filters(frame, face_memory, blur_faces=True):
-    """
-    Runs detection + temporal smoothing + blur.
-    """
     if not blur_faces:
         return frame
 
     detected_faces = detect_faces(frame)
-    faces_to_use = face_memory.update(detected_faces)
+    faces_to_blur = face_memory.update(detected_faces)
 
-    for (x, y, w, h) in faces_to_use:
+    for (x, y, w, h) in faces_to_blur:
         frame = blur_region(frame, x, y, w, h)
 
     return frame
 
 
+# -----------------------------
+# Main clip processor
+# -----------------------------
 def process_clips(clips, output_dir):
-    """
-    Reads video files, applies blur frame-by-frame,
-    writes processed MP4s.
-    """
-
-    import cv2
-
     processed_paths = []
 
     total = len(clips)
@@ -111,7 +158,7 @@ def process_clips(clips, output_dir):
         fourcc = cv2.VideoWriter_fourcc(*"mp4v")
         out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
 
-        # IMPORTANT: per-video memory tracker
+        # Create memory tracker per clip
         face_memory = FaceMemory()
 
         while True:

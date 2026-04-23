@@ -3,7 +3,6 @@
 A command-line tool for organizing and stitching dashcam footage into a single "drive of the day" video. Optionally, the tool can apply a privacy filter that detects and blurs faces in each frame.
 
 ## Features
-
 - Automatically scans a directory for dashcam video files
 - Groups clips by recording date
 - Sorts clips chronologically
@@ -20,9 +19,7 @@ A command-line tool for organizing and stitching dashcam footage into a single "
     └── stitch.py
 ```
 
-
 ## Overview
-
 - **daily-drives.py**  
   Entry point for the CLI. Handles user interaction and orchestrates the full processing pipeline.
 
@@ -45,6 +42,15 @@ A command-line tool for organizing and stitching dashcam footage into a single "
 → stitch clips (stitch.py)
 → final output video
 ```
+## Model Setup
+This project uses OpenCV's YuNet face detection model.
+
+Download the model file and place it in:
+
+processor/models/
+
+Download link:
+https://github.com/opencv/opencv_zoo/raw/main/models/face_detection_yunet/face_detection_yunet_2023mar.onnx
 
 ## Audio
 Audio is preserved only when privacy filtering is disabled and if it was included in the original video files.
@@ -54,7 +60,6 @@ When privacy filtering is enabled, clips are processed using OpenCV, which re-en
 This is a known limitation of the current pipeline design.
 
 ## Codec Requirements
-
 This project assumes that all input video clips share the same video and audio codecs, as well as consistent encoding parameters.
 
 The stitching process uses FFmpeg’s concat demuxer with stream copy (`-c copy`), which does not re-encode media. As a result, all clips must be compatible at the container and codec level for successful concatenation.

@@ -55,3 +55,16 @@ def ensure_output_dirs(date_str: str, use_blur: bool):
         os.makedirs(processed_dir, exist_ok=True)
 
     return base_output, processed_dir
+
+def cleanup_processed_files(file_paths):
+    """
+    Deletes temporary processed video files.
+    """
+    print("\nCleaning up temporary files...")
+
+    for path in file_paths:
+        try:
+            if os.path.exists(path):
+                os.remove(path)
+        except Exception as e:
+            print(f"  -> Failed to delete {path}: {e}")

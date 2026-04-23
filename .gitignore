@@ -15,4 +15,7 @@ venv/
 output/
 *.mp4
 
+# models
+processor/models/
+
 *.log

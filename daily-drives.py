@@ -7,6 +7,7 @@ from processor.utils import (
     sort_clips_by_time,
     summarize_day,
     ensure_output_dirs,
+    cleanup_processed_files
 )
 
 from processor.blur import process_clips
@@ -102,6 +103,12 @@ def main():
 
     print("\nStitching clips...")
     stitch_clips(final_clips, final_output_path)
+
+    # -------------------------
+    # Cleanup (only if blur used)
+    # -------------------------
+    if use_blur:
+        cleanup_processed_files(final_clips)
 
     # -------------------------
     # Timing + completion output

@@ -72,3 +72,80 @@ The stitching process uses FFmpeg’s concat demuxer with stream copy (`-c copy`
 - Same encoding settings
 
 If clips differ in these properties, FFmpeg may fail to stitch them correctly or may drop audio/video streams.
+
+## Examples
+
+### With privacy filtering applied
+```
+$ python daily-drives.py
+
+=== Dashcam Processor ===
+
+Enter path to dashcam footage: E:\Normal\Front
+
+Scanning for clips...
+
+Available dates:
+[1] 2026-04-17 (20 clips)
+[2] 2026-04-18 (22 clips)
+[3] 2026-04-19 (14 clips)
+[4] 2026-04-20 (47 clips)
+[5] 2026-04-22 (8 clips)
+
+Select a date (1-5): 5
+
+Selected date: 2026-04-22
+Clips: 8 | Time range: 12:05:56 PM -> 02:15:26 PM
+
+Apply privacy blurring? (y/n): y
+
+Running privacy processing...
+
+Processing clips (privacy filter)...
+[1/8] Processing clip1.mp4
+[2/8] Processing clip2.mp4
+...
+[8/8] Processing clip8.mp4
+
+Stitching clips...
+
+Cleaning up temporary files...
+
+Output saved to: output/2026-04-22/final.mp4
+Done!
+Time elapsed: 02:35:43
+```
+
+### Without privacy filtering applied
+```
+$ python daily-drives.py
+
+=== Dashcam Processor ===
+
+Enter path to dashcam footage: E:\Normal\Front
+
+Scanning for clips...
+
+Available dates:
+[1] 2026-04-17 (20 clips)
+[2] 2026-04-18 (22 clips)
+[3] 2026-04-19 (14 clips)
+[4] 2026-04-20 (47 clips)
+[5] 2026-04-22 (8 clips)
+
+Select a date (1-5): 5
+
+Selected date: 2026-04-22
+Clips: 8 | Time range: 12:05:56 PM -> 02:15:26 PM
+
+Apply privacy blurring? (y/n): n
+
+Skipping privacy processing...
+Audio will be preserved.
+
+Stitching clips...
+
+Output saved to: output/2026-04-22/final.mp4
+Done!
+Time elapsed: 00:02:47
+```

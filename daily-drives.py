@@ -93,7 +93,7 @@ def main():
         final_clips = process_clips(clips, processed_dir)
     else:
         print("\nSkipping privacy processing...")
-        print("\nAudio will be preserved.")
+        print("Audio will be preserved.")
         start_time = time.time()
         final_clips = clips
 

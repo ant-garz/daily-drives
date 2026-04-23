@@ -60,7 +60,7 @@ def cleanup_processed_files(file_paths):
     """
     Deletes temporary processed video files.
     """
-    print("\nCleaning up temporary files...")
+    print("Cleaning up temporary files...")
 
     for path in file_paths:
         try:

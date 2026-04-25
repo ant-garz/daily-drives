@@ -1,7 +1,8 @@
 # Dashcam Daily Drives
-A command-line tool for organizing and stitching dashcam footage into a single "drive of the day" video. Optionally, the tool can apply a privacy filter that detects and blurs faces in each frame.
+A command-line tool for organizing and stitching dashcam footage into a single “drive of the day” video, with optional face-based privacy filtering (see limitations below).
+Built as a personal project to explore video processing and computer vision workflows in Python.
 
-# Why I built this
+## Why I built this
 Dashcams generate many small clips per drive, making it tedious to review or share footage. 
 I wanted a simple way to consolidate daily drives into a single video, while also addressing privacy concerns when sharing footage publicly.
 
@@ -37,7 +38,7 @@ This tool is intended for educational and personal use to explore video processi
   Responsible for file discovery, grouping clips by date, sorting them chronologically, and preparing output directories.
 
 - **processor/detect.py**  
-  Performs face detection using OpenCV’s YuNet (face_detection_yunet_2023mar) deep learning model
+  Performs face detection using OpenCV’s YuNet (face_detection_yunet_2023mar) deep learning model.
 
 - **processor/blur.py**  
   Applies frame-by-frame privacy filtering (face blurring) and writes processed video clips.
@@ -57,7 +58,7 @@ This project uses OpenCV's YuNet face detection model.
 
 Download the model file and place it in:
 
-processor/models/
+`processor/models/`
 
 Download link:
 https://github.com/opencv/opencv_zoo/raw/main/models/face_detection_yunet/face_detection_yunet_2023mar.onnx
@@ -86,10 +87,19 @@ If clips differ in these properties, FFmpeg may fail to stitch them correctly or
 
 ## Examples
 ### Visual output: privacy filtering
-**Before (input frame)**  
+
+**Input (no privacy filtering)**
+
 ![Unprocessed photo of person standing in front of the dash camera.](examples/unblurred-photo.png)
-**After (privacy mode enabled)**
+
+**Output (privacy mode enabled)**
+
 ![Processed photo of person standing in front of the dash camera with privacy blurring applied.](examples/blurred-photo.png)
+
+**Short clip showing privacy filtering applied across frames**  
+
+![Example gif of blurring applied.](examples/blurred-example.gif)
+
 ### CLI output (With privacy filtering applied)
 ```
 $ python daily-drives.py

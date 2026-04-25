@@ -109,7 +109,7 @@ def main():
     # Cleanup (only if blur used)
     # -------------------------
     if use_blur:
-        cleanup_processed_files(final_clips)
+        cleanup_processed_files(processed_dir)
 
     # -------------------------
     # Timing + completion output

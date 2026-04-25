@@ -1,6 +1,9 @@
 # Dashcam Daily Drives
-
 A command-line tool for organizing and stitching dashcam footage into a single "drive of the day" video. Optionally, the tool can apply a privacy filter that detects and blurs faces in each frame.
+
+# Why I built this
+Dashcams generate many small clips per drive, making it tedious to review or share footage. 
+I wanted a simple way to consolidate daily drives into a single video, while also addressing privacy concerns when sharing footage publicly.
 
 ## Features
 - Automatically scans a directory for dashcam video files
@@ -8,6 +11,13 @@ A command-line tool for organizing and stitching dashcam footage into a single "
 - Sorts clips chronologically
 - Optionally applies face detection and blur for privacy
 - Efficiently stitches clips together using FFmpeg (no re-encoding)
+
+## Limitations
+The privacy filtering feature is designed specifically for face detection and blurring using OpenCV’s YuNet model. It does not detect or obscure other potentially identifiable features such as tattoos, clothing, license plates, or background identifiers.
+
+As with most vision-based approaches, detection is not perfect and may occasionally miss faces depending on lighting, angle, or occlusion.
+
+This tool is intended for educational and personal use to explore video processing and computer vision workflows, and is not designed for production-level privacy protection.
 
 ## Project Structure
 ```text
@@ -27,7 +37,7 @@ A command-line tool for organizing and stitching dashcam footage into a single "
   Responsible for file discovery, grouping clips by date, sorting them chronologically, and preparing output directories.
 
 - **processor/detect.py**  
-  Performs face detection using OpenCV’s Haar cascade model.
+  Performs face detection using OpenCV’s YuNet (face_detection_yunet_2023mar) deep learning model
 
 - **processor/blur.py**  
   Applies frame-by-frame privacy filtering (face blurring) and writes processed video clips.
@@ -75,8 +85,12 @@ The stitching process uses FFmpeg’s concat demuxer with stream copy (`-c copy`
 If clips differ in these properties, FFmpeg may fail to stitch them correctly or may drop audio/video streams.
 
 ## Examples
-
-### With privacy filtering applied
+### Visual output: privacy filtering
+**Before (input frame)**  
+![Unprocessed photo of person standing in front of the dash camera.](examples/unblurred-photo.png)
+**After (privacy mode enabled)**
+![Processed photo of person standing in front of the dash camera with privacy blurring applied.](examples/blurred-photo.png)
+### CLI output (With privacy filtering applied)
 ```
 $ python daily-drives.py
 
@@ -114,38 +128,4 @@ Cleaning up temporary files...
 Output saved to: output/2026-04-22/final.mp4
 Done!
 Time elapsed: 02:35:43
-```
-
-### Without privacy filtering applied
-```
-$ python daily-drives.py
-
-=== Dashcam Processor ===
-
-Enter path to dashcam footage: E:\Normal\Front
-
-Scanning for clips...
-
-Available dates:
-[1] 2026-04-17 (20 clips)
-[2] 2026-04-18 (22 clips)
-[3] 2026-04-19 (14 clips)
-[4] 2026-04-20 (47 clips)
-[5] 2026-04-22 (8 clips)
-
-Select a date (1-5): 5
-
-Selected date: 2026-04-22
-Clips: 8 | Time range: 12:05:56 PM -> 02:15:26 PM
-
-Apply privacy blurring? (y/n): n
-
-Skipping privacy processing...
-Audio will be preserved.
-
-Stitching clips...
-
-Output saved to: output/2026-04-22/final.mp4
-Done!
-Time elapsed: 00:02:47
 ```

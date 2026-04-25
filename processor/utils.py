@@ -1,6 +1,7 @@
 import os
 from collections import defaultdict
 from datetime import datetime
+import shutil
 
 VIDEO_EXT = ".mp4"
 
@@ -56,15 +57,14 @@ def ensure_output_dirs(date_str: str, use_blur: bool):
 
     return base_output, processed_dir
 
-def cleanup_processed_files(file_paths):
+def cleanup_processed_files(processed_dir):
     """
-    Deletes temporary processed video files.
+    Deletes the entire processed directory and all temporary files.
     """
     print("Cleaning up temporary files...")
 
-    for path in file_paths:
+    if processed_dir and os.path.exists(processed_dir):
         try:
-            if os.path.exists(path):
-                os.remove(path)
+            shutil.rmtree(processed_dir)
         except Exception as e:
-            print(f"  -> Failed to delete {path}: {e}")
+            print(f"  -> Failed to delete processed directory: {e}")

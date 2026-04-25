@@ -3,8 +3,9 @@ A command-line tool for organizing and stitching dashcam footage into a single â
 Built as a personal project to explore video processing and computer vision workflows in Python.
 
 ## Why I built this
-Dashcams generate many small clips per drive, making it tedious to review or share footage. 
-I wanted a simple way to consolidate daily drives into a single video, while also addressing privacy concerns when sharing footage publicly.
+Dashcams generate a lot of small clips per drive.
+I used this project to explore video processing tools like FFmpeg, and to experiment with organizing and stitching real-world footage into a single continuous video.
+I also used it to learn about basic privacy filtering for shared dashcam footage, using pre-trained face detection models to blur identifiable details before exporting.
 
 ## Features
 - Automatically scans a directory for dashcam video files
